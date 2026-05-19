@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { OctagonAlertIcon } from "lucide-react";
+import { LogInIcon, OctagonAlertIcon } from "lucide-react";
 
 
 
@@ -28,6 +28,7 @@ const formSchema = z.object({
 export const SignInView = () => {
     const router = useRouter();
     const [error, setError] = useState<string | null>(null)
+    const [googleLoading, setGoogleLoading] = useState(false)
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -43,13 +44,31 @@ export const SignInView = () => {
         setError(null);
         await authClient.signIn.email({
             email: data.email,
-            password: data.password
+            password: data.password,
+            callbackURL: "/"
         }, {
             onSuccess: () => router.push("/"),
             onError: ({ error }) => setError(error.message)
         })
     }
 
+    async function handleGoogleLogin() {
+        try {
+            setGoogleLoading(true);
+
+            await authClient.signIn.social({
+                provider: "google",
+                callbackURL: "/",
+            }, {
+                onSuccess: () => router.push("/"),
+
+                onError: ({ error }) => setError(error.message)
+            });
+        } catch (error) {
+            setGoogleLoading(false);
+            toast.error("Something went wrong");
+        }
+    }
     return (
         <div className="flex gap-6 flex-col">
 
@@ -117,7 +136,7 @@ export const SignInView = () => {
                                 </Field>}
                                 <Field orientation="horizontal">
                                     <Button type="submit" form="login-form" disabled={isSubmitting}>
-                                        {isSubmitting ? "Signing in..." : "Submit"}
+                                        {isSubmitting ? "Signing in..." : "Sign In"}
 
                                     </Button>
                                 </Field>
@@ -131,6 +150,17 @@ export const SignInView = () => {
                                     </Link>
                                 </div>
                             </div>
+                            <Field orientation="vertical">
+                                <Button
+                                    type="button"
+                                    form="login-form"
+                                    onClick={handleGoogleLogin}
+                                    disabled={googleLoading || isSubmitting}
+                                >
+                                    {googleLoading ? "Redirecting..." : "Continue with Google"}
+                                    <LogInIcon />
+                                </Button>
+                            </Field>
                         </div>
                     </form>
                     <div className="bg-radial from-green-700 to-green-900 relative md:flex flex-col gap-y-4 items-center justify-center">

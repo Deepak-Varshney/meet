@@ -11,10 +11,10 @@ import { Controller, useForm } from "react-hook-form";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { OctagonAlertIcon } from "lucide-react";
+import { LogInIcon, OctagonAlertIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 
 
@@ -28,9 +28,9 @@ const formSchema = z.object({
 
 
 export const SignUpView = () => {
-    const router = useRouter();
     const [error, setError] = useState<string | null>(null)
-
+    const [googleLoading, setGoogleLoading] = useState(false)
+    const router = useRouter()
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -48,13 +48,29 @@ export const SignUpView = () => {
         await authClient.signUp.email({
             email: data.email,
             password: data.password,
-            name: data.name
+            name: data.name,
+            callbackURL: "/"
         }, {
             onSuccess: () => router.push("/"),
             onError: ({ error }) => setError(error.message)
         })
     }
 
+    async function handleGoogleLogin() {
+        try {
+            setGoogleLoading(true);
+
+            await authClient.signIn.social({
+                provider: "google",
+                callbackURL: "/",
+            }, {
+                onSuccess: () => router.push("/")
+            });
+        } catch (error) {
+            setGoogleLoading(false);
+            toast.error("Something went wrong");
+        }
+    }
     return (
         <div className="flex gap-6 flex-col">
             <Card className="overflow-hidden p-0">
@@ -167,7 +183,7 @@ export const SignUpView = () => {
                                 </Field>}
                                 <Field orientation="horizontal">
                                     <Button type="submit" form="login-form" disabled={isSubmitting}>
-                                        {isSubmitting ? "Signing in..." : "Submit"}
+                                        {isSubmitting ? "Signing in..." : "Sign Up"}
 
                                     </Button>
                                 </Field>
@@ -181,6 +197,17 @@ export const SignUpView = () => {
                                     </Link>
                                 </div>
                             </div>
+                            <Field orientation="vertical">
+                                <Button
+                                    type="button"
+                                    form="login-form"
+                                    onClick={handleGoogleLogin}
+                                    disabled={googleLoading || isSubmitting}
+                                >
+                                    {googleLoading ? "Redirecting..." : "Continue with Google"}
+                                    <LogInIcon />
+                                </Button>
+                            </Field>
                         </div>
                     </form>
                     <div className="bg-radial from-green-700 to-green-900 relative md:flex flex-col gap-y-4 items-center justify-center">
