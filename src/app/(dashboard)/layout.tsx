@@ -9,7 +9,7 @@ const DashboardLayout = ({ children }: Props) => {
     return (
         <SidebarProvider>
             <DashboardSidebar />
-            <main className=''>
+            <main className='flex min-h-screen flex-1 flex-col'>
                 <DashboardNavbar/>
                 {children}
             </main>
