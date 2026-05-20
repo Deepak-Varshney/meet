@@ -1,6 +1,6 @@
 import { relations } from "drizzle-orm";
 import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
-
+import { nanoid } from "nanoid"
 export const user = pgTable("user", {
     id: text("id").primaryKey(),
     name: text("name").notNull(),
@@ -75,20 +75,30 @@ export const verification = pgTable(
 
 
 export const userRelations = relations(user, ({ many }) => ({
-  sessions: many(session),
-  accounts: many(account),
+    sessions: many(session),
+    accounts: many(account),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
-  user: one(user, {
-    fields: [session.userId],
-    references: [user.id],
-  }),
+    user: one(user, {
+        fields: [session.userId],
+        references: [user.id],
+    }),
 }));
 
 export const accountRelations = relations(account, ({ one }) => ({
-  user: one(user, {
-    fields: [account.userId],
-    references: [user.id],
-  }),
+    user: one(user, {
+        fields: [account.userId],
+        references: [user.id],
+    }),
 }));
+
+
+export const agents = pgTable("agents", {
+    id: text("id").primaryKey().$defaultFn(() => nanoid()),
+    name: text("name").notNull(),
+    userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+    instructions: text("instructions").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
