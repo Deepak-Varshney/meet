@@ -3,6 +3,14 @@
 import * as React from "react"
 import { Command as CommandPrimitive } from "cmdk"
 
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from "../ui/drawer";
+
 import { cn } from "@/lib/utils"
 import {
   Dialog,
@@ -16,6 +24,7 @@ import {
   InputGroupAddon,
 } from "@/components/ui/input-group"
 import { SearchIcon, CheckIcon } from "lucide-react"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 function Command({
   className,
@@ -56,6 +65,74 @@ function CommandDialog({
       <DialogContent
         className={cn(
           "top-1/3 translate-y-0 overflow-hidden rounded-xl! p-0",
+          className
+        )}
+        showCloseButton={showCloseButton}
+      >
+        <Command>
+          {children}
+        </Command>
+      </DialogContent>
+    </Dialog>
+  )
+}
+function CommandResponsiveDialog({
+  title = "Command Palette",
+  description = "Search for a command to run...",
+  children,
+  className,
+  showCloseButton = false,
+  open,
+  onOpenChange,
+}: {
+  title?: string
+  description?: string
+  children: React.ReactNode
+  className?: string
+  showCloseButton?: boolean
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const isMobile = useIsMobile()
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent
+          className="
+    border-0
+    bg-transparent
+    shadow-none
+    p-0
+    max-h-[80vh]
+    before:bg-transparent
+    before:border-0
+    before:shadow-none
+  "
+        >
+          <DrawerHeader className="sr-only">
+            <DrawerTitle>{title}</DrawerTitle>
+            <DrawerDescription>{description}</DrawerDescription>
+          </DrawerHeader>
+
+          <Command className="rounded-t-xl bg-popover">
+            {children}
+          </Command>
+        </DrawerContent>
+      </Drawer>
+    )
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogHeader className="sr-only">
+        <DialogTitle>{title}</DialogTitle>
+        <DialogDescription>{description}</DialogDescription>
+      </DialogHeader>
+
+      <DialogContent
+        className={cn(
+          "top-1/3 translate-y-0 overflow-hidden rounded-xl p-0",
           className
         )}
         showCloseButton={showCloseButton}
@@ -188,6 +265,7 @@ function CommandShortcut({
 export {
   Command,
   CommandDialog,
+  CommandResponsiveDialog,
   CommandInput,
   CommandList,
   CommandEmpty,
